@@ -1,0 +1,171 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+  --background: #fafbf8;
+  --foreground: #1c1b17;
+  --card: #ffffff;
+  --card-foreground: #1c1b17;
+  --popover: #ffffff;
+  --popover-foreground: #1c1b17;
+  --primary: #c7f252;
+  --primary-foreground: #1c1b17;
+  --primary-ink: #3f6212;
+  --secondary: #eef1eb;
+  --secondary-foreground: #292d27;
+  --muted: #f1f3ef;
+  --muted-foreground: #5f665d;
+  --accent: #f0fadf;
+  --accent-foreground: #3f6212;
+  --destructive: #be123c;
+  --border: rgb(28 27 23 / 0.13);
+  --input: #f3f5f1;
+  --ring: #4d7c0f;
+  --chart-1: #87b81b;
+  --chart-2: #a16207;
+  --chart-3: #2563eb;
+  --chart-4: #be123c;
+  --chart-5: #5f665d;
+  --radius: 0.5rem;
+  --sidebar: #fafbf8;
+  --sidebar-foreground: #1c1b17;
+  --sidebar-primary: #c7f252;
+  --sidebar-primary-foreground: #1c1b17;
+  --sidebar-accent: #eef1eb;
+  --sidebar-accent-foreground: #1c1b17;
+  --sidebar-border: rgb(28 27 23 / 0.12);
+  --sidebar-ring: #4d7c0f;
+  --rail-green: #c7f252;
+  --rail-green-soft: #3f6212;
+  --ledger-amber: #a16207;
+  --signal-red: #be123c;
+  --surface-inset: #f3f5f1;
+  --surface-hover: #eef1eb;
+}
+
+@theme inline {
+  --font-heading: "Fira Code Variable", ui-monospace, monospace;
+  --font-mono: "Fira Code Variable", ui-monospace, monospace;
+  --font-sans: "Fira Sans", ui-sans-serif, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-success: var(--rail-green);
+  --color-success-foreground: var(--rail-green-soft);
+  --color-warning: var(--ledger-amber);
+  --color-signal: var(--signal-red);
+  --color-inset: var(--surface-inset);
+  --color-surface-hover: var(--surface-hover);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply bg-background font-sans;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground;
+    margin: 0;
+  }
+
+  button,
+  a,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  ::selection {
+    background: rgb(199 242 82 / 0.55);
+    color: #1c1b17;
+  }
+}
+
+@layer utilities {
+  .surface-ring {
+    box-shadow:
+      0 0 0 1px rgb(28 27 23 / 0.07),
+      0 1px 2px -1px rgb(28 27 23 / 0.08),
+      0 2px 4px rgb(28 27 23 / 0.04);
+  }
+
+  .surface-ring-strong {
+    box-shadow:
+      0 0 0 1px rgb(28 27 23 / 0.1),
+      0 2px 4px -1px rgb(28 27 23 / 0.08),
+      0 6px 12px -4px rgb(28 27 23 / 0.1);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -1,0 +1,113 @@
+import type {
+  ActivityPage,
+  Agent,
+  AgentCreate,
+  AgentCreated,
+  FundInput,
+  FundResult,
+  KeyRotated,
+  KillSwitchResult,
+  OwnerStats,
+  Rules,
+  RulesInput,
+} from "@/lib/api/types";
+
+type TokenProvider = () => Promise<string | null>;
+
+export class KeruxApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly details?: unknown,
+  ) {
+    super(message);
+    this.name = "KeruxApiError";
+  }
+}
+
+export class KeruxClient {
+  constructor(
+    private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000",
+    private readonly getToken?: TokenProvider,
+  ) {}
+
+  private async request<T>(path: string, init?: RequestInit): Promise<T> {
+    const token = await this.getToken?.();
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      ...init,
+      headers: {
+        Accept: "application/json",
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const details = await response.json().catch(() => null);
+      throw new KeruxApiError(
+        typeof details === "object" && details && "detail" in details
+          ? String(details.detail)
+          : `Kerux API request failed with ${response.status}`,
+        response.status,
+        details,
+      );
+    }
+
+    return response.json() as Promise<T>;
+  }
+
+  listAgents() {
+    return this.request<Agent[]>("/v1/owner/agents");
+  }
+
+  getAgent(agentId: string) {
+    return this.request<Agent>(`/v1/owner/agents/${agentId}`);
+  }
+
+  createAgent(input: AgentCreate) {
+    return this.request<AgentCreated>("/v1/owner/agents", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  }
+
+  fundAgent(agentId: string, input: FundInput) {
+    return this.request<FundResult>(`/v1/owner/agents/${agentId}/fund`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  }
+
+  setRules(agentId: string, input: RulesInput) {
+    return this.request<Rules>(`/v1/owner/agents/${agentId}/rules`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    });
+  }
+
+  freezeAgent(agentId: string) {
+    return this.request<KillSwitchResult>(`/v1/owner/agents/${agentId}/freeze`, { method: "POST" });
+  }
+
+  unfreezeAgent(agentId: string) {
+    return this.request<KillSwitchResult>(`/v1/owner/agents/${agentId}/unfreeze`, { method: "POST" });
+  }
+
+  rotateKey(agentId: string) {
+    return this.request<KeyRotated>(`/v1/owner/agents/${agentId}/keys/rotate`, { method: "POST" });
+  }
+
+  activity(params?: { status?: string; limit?: number; before?: string }) {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.before) query.set("before", params.before);
+    const suffix = query.size ? `?${query}` : "";
+    return this.request<ActivityPage>(`/v1/owner/activity${suffix}`);
+  }
+
+  stats() {
+    return this.request<OwnerStats>("/v1/owner/stats");
+  }
+}
