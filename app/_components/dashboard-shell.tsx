@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Activity,
   ArrowDownRight,
@@ -80,10 +81,10 @@ import { currencies } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Overview", icon: Gauge, href: "#overview", active: true },
-  { label: "Agents", icon: Bot, href: "#agents" },
-  { label: "Activity", icon: Activity, href: "#activity" },
-  { label: "Guardrails", icon: ShieldCheck, href: "#guardrails" },
+  { label: "Overview", icon: Gauge, href: "/", active: true },
+  { label: "Agents", icon: Bot, href: "/agents" },
+  { label: "Activity", icon: Activity, href: "/activity" },
+  { label: "Guardrails", icon: ShieldCheck, href: "/guardrails" },
 ];
 
 const money = new Intl.NumberFormat("en-US", {
@@ -125,7 +126,7 @@ function NavContent({ mobile = false }: { mobile?: boolean }) {
           Control room
         </p>
         {navItems.map((item) => (
-          <a
+          <Link
             key={item.label}
             href={item.href}
             aria-current={item.active ? "page" : undefined}
@@ -139,7 +140,7 @@ function NavContent({ mobile = false }: { mobile?: boolean }) {
             {item.label === "Activity" && (
               <span className="ml-auto font-mono text-[10px] text-primary-ink tabular-nums">04</span>
             )}
-          </a>
+          </Link>
         ))}
       </nav>
 
@@ -158,10 +159,10 @@ function NavContent({ mobile = false }: { mobile?: boolean }) {
       </div>
 
       <div className="border-t border-sidebar-border p-3">
-        <a href="#settings" className="flex min-h-10 items-center gap-3 rounded-md px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <Link href="/settings" className="flex min-h-10 items-center gap-3 rounded-md px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
           <Settings className="size-4" strokeWidth={1.5} aria-hidden="true" />
           Settings
-        </a>
+        </Link>
       </div>
     </div>
   );

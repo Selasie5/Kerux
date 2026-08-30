@@ -61,6 +61,14 @@ export class KeruxClient {
     return this.request<Agent[]>("/v1/owner/agents");
   }
 
+  health() {
+    return this.request<Record<string, unknown>>("/health");
+  }
+
+  healthWeWire() {
+    return this.request<Record<string, unknown>>("/health/wewire");
+  }
+
   getAgent(agentId: string) {
     return this.request<Agent>(`/v1/owner/agents/${agentId}`);
   }
@@ -98,6 +106,15 @@ export class KeruxClient {
     return this.request<KeyRotated>(`/v1/owner/agents/${agentId}/keys/rotate`, { method: "POST" });
   }
 
+  agentTransactions(agentId: string, params?: { status?: string; limit?: number; before?: string }) {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.before) query.set("before", params.before);
+    const suffix = query.size ? `?${query}` : "";
+    return this.request<ActivityPage>(`/v1/owner/agents/${agentId}/transactions${suffix}`);
+  }
+
   activity(params?: { status?: string; limit?: number; before?: string }) {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
@@ -110,4 +127,15 @@ export class KeruxClient {
   stats() {
     return this.request<OwnerStats>("/v1/owner/stats");
   }
+}
+
+type ClerkBrowser = {
+  session?: { getToken: () => Promise<string | null> } | null;
+};
+
+export function createBrowserOwnerClient() {
+  return new KeruxClient(undefined, async () => {
+    if (typeof window === "undefined") return null;
+    return (window as Window & { Clerk?: ClerkBrowser }).Clerk?.session?.getToken() ?? null;
+  });
 }
