@@ -7,51 +7,51 @@
 
 :root {
   color-scheme: light;
-  --background: #fafbf8;
+  --background: #fafbfe;
   --foreground: #1c1b17;
   --card: #ffffff;
   --card-foreground: #1c1b17;
   --popover: #ffffff;
   --popover-foreground: #1c1b17;
-  --primary: #c7f252;
-  --primary-foreground: #1c1b17;
-  --primary-ink: #3f6212;
-  --secondary: #eef1eb;
+  --primary: #2457eb;
+  --primary-foreground: #ffffff;
+  --primary-ink: #1d46bc;
+  --secondary: #eef1f7;
   --secondary-foreground: #292d27;
-  --muted: #f1f3ef;
-  --muted-foreground: #5f665d;
-  --accent: #f0fadf;
-  --accent-foreground: #3f6212;
+  --muted: #f1f3f8;
+  --muted-foreground: #5d6473;
+  --accent: #edf2ff;
+  --accent-foreground: #1d46bc;
   --destructive: #be123c;
   --border: rgb(28 27 23 / 0.13);
-  --input: #f3f5f1;
-  --ring: #4d7c0f;
+  --input: #f3f5fa;
+  --ring: #2457eb;
   --chart-1: #87b81b;
   --chart-2: #a16207;
   --chart-3: #2563eb;
   --chart-4: #be123c;
-  --chart-5: #5f665d;
-  --radius: 0.5rem;
-  --sidebar: #fafbf8;
+  --chart-5: #5d6473;
+  --radius: 0px;
+  --sidebar: #fafbfe;
   --sidebar-foreground: #1c1b17;
-  --sidebar-primary: #c7f252;
-  --sidebar-primary-foreground: #1c1b17;
-  --sidebar-accent: #eef1eb;
+  --sidebar-primary: #2457eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef1f7;
   --sidebar-accent-foreground: #1c1b17;
   --sidebar-border: rgb(28 27 23 / 0.12);
-  --sidebar-ring: #4d7c0f;
-  --rail-green: #c7f252;
-  --rail-green-soft: #3f6212;
+  --sidebar-ring: #2457eb;
+  --rail-green: #2457eb;
+  --rail-green-soft: #1d46bc;
   --ledger-amber: #a16207;
   --signal-red: #be123c;
-  --surface-inset: #f3f5f1;
-  --surface-hover: #eef1eb;
+  --surface-inset: #f3f5fa;
+  --surface-hover: #eef1f7;
 }
 
 @theme inline {
-  --font-heading: "Fira Code Variable", ui-monospace, monospace;
-  --font-mono: "Fira Code Variable", ui-monospace, monospace;
-  --font-sans: "Fira Sans", ui-sans-serif, sans-serif;
+  --font-heading: "Stack Sans Headline Variable", ui-sans-serif, sans-serif;
+  --font-mono: "Geist Variable", ui-sans-serif, sans-serif;
+  --font-sans: "Geist Variable", ui-sans-serif, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -90,11 +90,11 @@
   --color-signal: var(--signal-red);
   --color-inset: var(--surface-inset);
   --color-surface-hover: var(--surface-hover);
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.625rem;
-  --radius-2xl: 0.75rem;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
 }
 
 @layer base {
@@ -115,6 +115,15 @@
     margin: 0;
   }
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+
   button,
   a,
   [role="button"] {
@@ -127,7 +136,7 @@
   }
 
   ::selection {
-    background: rgb(199 242 82 / 0.55);
+    background: rgb(36 87 235 / 0.2);
     color: #1c1b17;
   }
 }
@@ -158,6 +167,14 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  .landing-grid {
+    background-image:
+      linear-gradient(rgb(28 27 23 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(28 27 23 / 0.045) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center top;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -169,4 +186,26 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Square corners are an app-wide design requirement, including portal UI. */
+*, *::before, *::after {
+  border-radius: 0 !important;
+}
+
+.landing-header { background: var(--card); }
+.landing-header nav a { padding-block: 1.75rem; border-bottom: 2px solid transparent; }
+.landing-header nav a:hover { border-bottom-color: var(--primary); }
+.landing-hero { background: var(--background); }
+.landing-hero h1 { letter-spacing: -0.045em; line-height: 1.04; }
+.landing-hero .hero-copy { max-width: 600px; }
+.landing-hero .hero-eyebrow { box-shadow: none; background: transparent; padding: 0; }
+.landing-hero .hero-eyebrow span { animation: none; }
+.landing-preview { border: 1px solid var(--border); box-shadow: 0 18px 48px -32px rgb(28 27 23 / 0.3); }
+/* Blue text needs a lighter tone on the dark product specimens. */
+.bg-foreground .text-primary { color: #94b5ff; }
+.bg-foreground svg { --primary: #94b5ff; }
+@media (max-width: 639px) {
+  .landing-hero h1 { font-size: clamp(2.5rem, 10vw, 3.5rem); }
+  .landing-header [data-slot="button"] { padding-inline: 12px; font-size: 12px; }
 }

@@ -21,13 +21,13 @@ import { useOwnerApi } from "@/lib/api/provider";
 import type { HealthStatus, OwnerStats } from "@/lib/api/types";
 
 const navItems = [
-  { label: "Overview", icon: Gauge, href: "/" },
+  { label: "Overview", icon: Gauge, href: "/dashboard" },
   { label: "Agents", icon: Bot, href: "/agents" },
   { label: "Activity", icon: Activity, href: "/activity" },
   { label: "Guardrails", icon: ShieldCheck, href: "/guardrails" },
 ] as const;
 
-function Navigation({ pathname, health, stats, latency, onNavigate, mobile = false }: { pathname: string; health: HealthStatus | null; stats: OwnerStats | null; latency: number | null; onNavigate?: () => void; mobile?: boolean }) {
+function Navigation({ pathname, stats, onNavigate, mobile = false }: { pathname: string; health: HealthStatus | null; stats: OwnerStats | null; latency: number | null; onNavigate?: () => void; mobile?: boolean }) {
   return (
     <div className="flex h-full flex-col">
       <div className={cn("flex h-16 items-center border-b border-sidebar-border", mobile ? "px-4" : "px-5")}>
@@ -58,19 +58,7 @@ function Navigation({ pathname, health, stats, latency, onNavigate, mobile = fal
         })}
       </nav>
 
-      <div className="m-3 rounded-lg bg-card p-3 surface-ring">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-xs font-medium">
-            <span className="relative flex size-2" aria-hidden="true">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60 motion-reduce:animate-none" />
-              <span className="relative inline-flex size-2 rounded-full bg-primary" />
-            </span>
-            WeWire {health?.wewire_mode ?? "checking"}
-          </span>
-          <span className="font-mono text-[10px] text-muted-foreground">{latency === null ? "—" : `${latency}ms`}</span>
-        </div>
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">{health?.wewire_mode === "mock" ? "Mock mode: no real rail calls." : health ? "Rail configured. Policy checks remain local-first." : "Checking the backend and rail mode."}</p>
-      </div>
+
 
       <div className="border-t border-sidebar-border p-3">
         <Link
@@ -141,10 +129,10 @@ export function ControlRoomShell({ children }: { children: React.ReactNode }) {
           <div className="lg:hidden"><KeruxMark /></div>
           <div className="hidden min-w-0 lg:block">
             <p className="truncate text-sm font-medium">Owner workspace</p>
-            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{health?.dev_auth ? "development auth" : "Clerk protected"} · {health?.wewire_env ?? "environment pending"}</p>
+            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{health?.wewire_mode === "mock" ? "Test mode · simulated payments" : health?.wewire_env === "sandbox" ? "Test environment" : "Workspace"}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Refresh rail status" onClick={refreshStatus} disabled={refreshing}>
+            <Button variant="ghost" size="icon" aria-label="Refresh workspace" onClick={refreshStatus} disabled={refreshing}>
               <RefreshCw className={cn(refreshing && "animate-spin motion-reduce:animate-none")} aria-hidden="true" />
             </Button>
             <AuthControls />

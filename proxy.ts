@@ -4,7 +4,7 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server
 const clerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
 );
-const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
+const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
 
 const authenticatedProxy = clerkConfigured
   ? clerkMiddleware(async (auth, request) => {

@@ -1,5 +1,14 @@
 # Design System Master File
 
+## Current visual direction (supersedes legacy recipes below)
+
+- Primary: royal blue `#2457EB`; on-primary: white `#FFFFFF`.
+- Primary text: `#1D46BC`; pale accent: `#EDF2FF`; background: `#FAFBFE`.
+- All border radii: `0`, including buttons, cards, inputs, dialogs, badges, and authentication UI.
+- Stack Sans Headline headings with restrained tracking; Geist body and supporting text.
+- Hero: spacious typography, concise copy, a clear primary action, and a framed product preview.
+- Navbar: solid white, aligned content edges, thin dividers, blue hover indicators.
+
 > **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
 > If that file exists, its rules **override** this Master file.
 > If not, strictly follow the rules below.
@@ -41,14 +50,15 @@
 
 ### Typography
 
-- **Heading Font:** Fira Code
-- **Body Font:** Fira Sans
-- **Mood:** dashboard, data, analytics, code, technical, precise
-- **Google Fonts:** [Fira Code + Fira Sans](https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap)
+- **Heading Font:** Stack Sans Headline
+- **Body Font:** Geist
+- **Mood:** technical, editorial, precise, modern, trustworthy
+- **Font Sources:** [Stack Sans Headline](https://fontsource.org/fonts/stack-sans-headline) + [Geist](https://fontsource.org/fonts/geist)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+@import '@fontsource-variable/stack-sans-headline/wght.css';
+@import '@fontsource-variable/geist/wght.css';
 ```
 
 ### Spacing Variables

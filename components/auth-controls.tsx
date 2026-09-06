@@ -9,11 +9,11 @@ const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 export function AuthControls() {
   if (!clerkConfigured) {
     return (
-      <div className="flex h-10 items-center gap-2 rounded-md border border-border bg-card px-2.5 text-xs text-muted-foreground" title="Add Clerk keys to enable authentication">
+      <div className="flex h-10 items-center gap-2 rounded-md border border-border bg-card px-2.5 text-xs text-muted-foreground" title="Workspace access is not configured">
         <span className="grid size-6 place-items-center rounded-sm bg-accent text-accent-foreground">
           <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden="true" />
         </span>
-        <span className="hidden sm:inline">Demo workspace</span>
+        <span className="hidden sm:inline">Access unavailable</span>
       </div>
     );
   }

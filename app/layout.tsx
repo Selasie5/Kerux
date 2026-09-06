@@ -1,10 +1,8 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
-import "@fontsource/fira-sans/400.css";
-import "@fontsource/fira-sans/500.css";
-import "@fontsource/fira-sans/600.css";
-import "@fontsource-variable/fira-code";
+import "@fontsource-variable/geist/wght.css";
+import "@fontsource-variable/stack-sans-headline/wght.css";
 import "./globals.css";
 import { AppProviders } from "@/components/app-providers";
 
@@ -21,7 +19,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className="font-sans">
       <body>
         {clerkPublishableKey
-          ? <ClerkProvider publishableKey={clerkPublishableKey} appearance={{ theme: shadcn }}>{content}</ClerkProvider>
+          ? (
+              <ClerkProvider
+                publishableKey={clerkPublishableKey}
+                signInFallbackRedirectUrl="/dashboard"
+                signUpFallbackRedirectUrl="/dashboard"
+                appearance={{ theme: shadcn }}
+              >
+                {content}
+              </ClerkProvider>
+            )
           : content}
       </body>
     </html>
