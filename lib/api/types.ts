@@ -1,8 +1,8 @@
-export const currencies = ["USD", "GHS", "EUR", "GBP", "NGN", "KES", "USDT", "USDC"] as const;
+export const currencies = ["GHST", "USD", "GHS", "EUR", "GBP", "NGN", "KES", "USDT", "USDC"] as const;
 
 export type Currency = (typeof currencies)[number];
 export type AgentStatus = "active" | "frozen" | string;
-export type PaymentStatus = "approved" | "executed" | "blocked" | "failed" | string;
+export type PaymentStatus = "APPROVED" | "SUBMITTED" | "EXECUTED" | "BLOCKED" | "FAILED" | string;
 
 export interface Rules {
   max_per_transaction: string;
@@ -27,9 +27,9 @@ export interface Agent {
 export interface AgentCreate {
   name: string;
   base_currency?: Currency;
-  initial_funding?: number | string | null;
-  max_per_transaction?: number | string | null;
-  max_per_day?: number | string | null;
+  initial_funding?: string | null;
+  max_per_transaction?: string | null;
+  max_per_day?: string | null;
 }
 
 export interface AgentCreated {
@@ -59,7 +59,7 @@ export interface ActivityPage {
 }
 
 export interface FundInput {
-  amount: number | string;
+  amount: string;
   currency?: Currency | null;
 }
 
@@ -72,8 +72,8 @@ export interface FundResult {
 }
 
 export interface RulesInput {
-  max_per_transaction: number | string;
-  max_per_day: number | string;
+  max_per_transaction: string;
+  max_per_day: string;
   allowed_counterparty_ids?: string[] | null;
 }
 
@@ -90,9 +90,26 @@ export interface KeyRotated {
 }
 
 export interface OwnerStats {
-  total_balance?: string;
-  active_agents?: number;
-  spent_today?: string;
-  blocked_today?: number;
+  agents: number;
+  frozen: number;
+  blocked_today: number;
+  executed_today: number;
+}
+
+export interface HealthStatus {
+  status?: string;
+  wewire_mode?: string;
+  wewire_env?: string;
+  database_configured?: boolean;
+  clerk_configured?: boolean;
+  dev_auth?: boolean;
   [key: string]: unknown;
 }
+
+export type OwnerEventType =
+  | "payment"
+  | "agent.created"
+  | "agent.funded"
+  | "agent.frozen"
+  | "agent.unfrozen"
+  | "agent.rules_updated";

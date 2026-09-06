@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@clerk/nextjs": "latest",
+    "@clerk/ui": "^1.32.2",
     "@fontsource-variable/fira-code": "latest",
     "@fontsource/fira-sans": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "decimal.js": "^10.6.0",
     "lucide-react": "latest",
     "next": "latest",
     "radix-ui": "^1.6.7",

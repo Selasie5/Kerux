@@ -1,5 +1,6 @@
-import { DashboardShell } from "@/app/_components/dashboard-shell";
+import { ControlRoomShell } from "@/app/_components/control-room-shell";
+import { OverviewPage } from "@/app/_components/overview-page";
 
 export default function Home() {
-  return <DashboardShell />;
+  return <ControlRoomShell><OverviewPage /></ControlRoomShell>;
 }

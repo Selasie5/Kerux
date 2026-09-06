@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -20,14 +20,15 @@ export function AuthControls() {
 
   return (
     <>
-      <SignedOut>
-        <SignInButton mode="modal">
-          <Button variant="outline">Sign in</Button>
-        </SignInButton>
-      </SignedOut>
-      <SignedIn>
+      <Show when="signed-out">
+        <div className="flex items-center gap-2">
+          <SignInButton mode="modal"><Button variant="outline">Sign in</Button></SignInButton>
+          <SignUpButton mode="modal"><Button>Sign up</Button></SignUpButton>
+        </div>
+      </Show>
+      <Show when="signed-in">
         <UserButton />
-      </SignedIn>
+      </Show>
     </>
   );
 }

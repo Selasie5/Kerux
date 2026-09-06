@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
 import "@fontsource/fira-sans/400.css";
 import "@fontsource/fira-sans/500.css";
@@ -12,10 +14,15 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const content = <AppProviders>{children}</AppProviders>;
+
   return (
     <html lang="en" className="font-sans">
       <body>
-        <AppProviders>{children}</AppProviders>
+        {clerkPublishableKey
+          ? <ClerkProvider publishableKey={clerkPublishableKey} appearance={{ theme: shadcn }}>{content}</ClerkProvider>
+          : content}
       </body>
     </html>
   );

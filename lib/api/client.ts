@@ -5,6 +5,7 @@ import type {
   AgentCreated,
   FundInput,
   FundResult,
+  HealthStatus,
   KeyRotated,
   KillSwitchResult,
   OwnerStats,
@@ -12,12 +13,18 @@ import type {
   RulesInput,
 } from "@/lib/api/types";
 
-type TokenProvider = () => Promise<string | null>;
+export type TokenProvider = () => Promise<string | null>;
+
+type ErrorEnvelope = {
+  error?: { code?: string; message?: string };
+  detail?: string | Array<{ msg?: string }>;
+};
 
 export class KeruxApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    public readonly code?: string,
     public readonly details?: unknown,
   ) {
     super(message);
@@ -27,9 +34,19 @@ export class KeruxApiError extends Error {
 
 export class KeruxClient {
   constructor(
-    private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000",
+    private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://kerux-backend.onrender.com",
     private readonly getToken?: TokenProvider,
   ) {}
+
+  token() {
+    return this.getToken?.() ?? Promise.resolve(null);
+  }
+
+  eventsUrl(token?: string | null) {
+    const url = new URL("/v1/owner/events", this.baseUrl);
+    if (token) url.searchParams.set("token", token);
+    return url.toString();
+  }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     const token = await this.getToken?.();
@@ -44,12 +61,15 @@ export class KeruxClient {
     });
 
     if (!response.ok) {
-      const details = await response.json().catch(() => null);
+      const details = await response.json().catch(() => null) as ErrorEnvelope | null;
+      const apiError = details?.error;
+      const validationMessage = Array.isArray(details?.detail)
+        ? details.detail.map((item) => item.msg).filter(Boolean).join(" ")
+        : details?.detail;
       throw new KeruxApiError(
-        typeof details === "object" && details && "detail" in details
-          ? String(details.detail)
-          : `Kerux API request failed with ${response.status}`,
+        apiError?.message ?? validationMessage ?? `Kerux API request failed with ${response.status}`,
         response.status,
+        apiError?.code,
         details,
       );
     }
@@ -62,7 +82,7 @@ export class KeruxClient {
   }
 
   health() {
-    return this.request<Record<string, unknown>>("/health");
+    return this.request<HealthStatus>("/health");
   }
 
   healthWeWire() {
@@ -129,13 +149,6 @@ export class KeruxClient {
   }
 }
 
-type ClerkBrowser = {
-  session?: { getToken: () => Promise<string | null> } | null;
-};
-
-export function createBrowserOwnerClient() {
-  return new KeruxClient(undefined, async () => {
-    if (typeof window === "undefined") return null;
-    return (window as Window & { Clerk?: ClerkBrowser }).Clerk?.session?.getToken() ?? null;
-  });
+export function createBrowserOwnerClient(getToken?: TokenProvider) {
+  return new KeruxClient(undefined, getToken);
 }
