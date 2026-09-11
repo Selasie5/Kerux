@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Copy, KeyRound, Pause, Play, RefreshCw, ShieldAlert, SlidersHorizontal, WalletCards, X } from "lucide-react";
+import { ArrowLeft, Check, Copy, KeyRound, Pause, Play, RefreshCw, Send, ShieldAlert, SlidersHorizontal, WalletCards, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useOwnerApi } from "@/lib/api/provider";
 import { useOwnerEvents } from "@/lib/api/use-owner-events";
 import { apiKeyPrefix, formatMoney, formatTimestamp, isStatus, normalizeStatus, ratioPercent } from "@/lib/api/format";
-import type { Agent, Payment, RulesInput } from "@/lib/api/types";
+import type { Agent, LinkToken, Payment, RulesInput } from "@/lib/api/types";
 
 function StateBadge({ status }: { status: string }) {
   const value = normalizeStatus(status);
@@ -24,6 +24,96 @@ function StateBadge({ status }: { status: string }) {
 function OneTimeKey({ value, onClose }: { value: string | null; onClose: () => void }) {
   const [copied, setCopied] = React.useState(false);
   return <Dialog open={Boolean(value)} onOpenChange={(open) => !open && onClose()}><DialogContent className="rounded-lg sm:max-w-[560px]"><DialogHeader><DialogTitle className="font-heading text-lg">Copy the fresh agent key now</DialogTitle><DialogDescription>The old keys remain revoked. This replacement is returned once and cannot be retrieved later.</DialogDescription></DialogHeader><div className="my-5 rounded-md bg-inset p-4 surface-ring"><code className="break-all font-mono text-xs leading-6">{value}</code></div><DialogFooter><Button variant="outline" onClick={onClose}>I stored it</Button><Button onClick={async () => { if (!value) return; await navigator.clipboard.writeText(value); setCopied(true); }}>{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}{copied ? "Copied" : "Copy key"}</Button></DialogFooter></DialogContent></Dialog>;
+}
+
+/** Connect to Telegram.
+ *
+ *  The link is minted when the dialog opens, never earlier: it is single-use
+ *  and expires in minutes, so one cached on page load is usually dead by the
+ *  time anyone taps it.
+ *
+ *  What the chat ends up holding is an *agent* key. It can spend inside the
+ *  agent's limits and cannot raise them, unfreeze the agent, or move money
+ *  anywhere else — which is the thing worth saying out loud in the dialog. */
+function ConnectTelegram({ agent, disabled }: { agent: Agent; disabled?: boolean }) {
+  const { client } = useOwnerApi();
+  const [open, setOpen] = React.useState(false);
+  const [link, setLink] = React.useState<LinkToken | null>(null);
+  const [qr, setQr] = React.useState<string | null>(null);
+  const [busy, setBusy] = React.useState(false);
+  const [failed, setFailed] = React.useState<string | null>(null);
+  const [copied, setCopied] = React.useState(false);
+  const [now, setNow] = React.useState(() => Date.now());
+
+  const mint = React.useCallback(async () => {
+    setBusy(true); setFailed(null); setLink(null); setQr(null); setCopied(false);
+    try {
+      const minted = await client.createLinkToken(agent.id);
+      setNow(Date.now());
+      setLink(minted);
+      if (minted.deep_link) {
+        const QRCode = (await import("qrcode")).default;
+        setQr(await QRCode.toDataURL(minted.deep_link, { margin: 1, width: 320 }));
+      }
+    } catch (err) {
+      setFailed(err instanceof Error ? err.message : "Could not create a link.");
+    } finally { setBusy(false); }
+  }, [agent.id, client]);
+
+  // Show the expiry ticking down rather than a timestamp — the whole point is
+  // that this link is about to stop working. The clock is derived from `now`
+  // rather than held in its own state, so the effect only advances a tick.
+  React.useEffect(() => {
+    if (!link) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [link]);
+
+  const secondsLeft = link
+    ? Math.max(0, Math.round((new Date(link.expires_at).getTime() - now) / 1000))
+    : null;
+  const expired = secondsLeft !== null && secondsLeft <= 0;
+  const clock = secondsLeft === null ? "" : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`;
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => { setOpen(next); if (next) void mint(); }}>
+      <DialogTrigger asChild>
+        <Button variant="outline" disabled={disabled}><Send aria-hidden="true" />Connect to Telegram</Button>
+      </DialogTrigger>
+      <DialogContent className="rounded-lg sm:max-w-[460px]">
+        <DialogHeader>
+          <DialogTitle className="font-heading text-lg">Connect {agent.name} to a chat</DialogTitle>
+          <DialogDescription>Scan or tap to bind this agent to one Telegram chat. Single use, and it expires in minutes.</DialogDescription>
+        </DialogHeader>
+
+        {busy && <p className="py-10 text-center text-sm text-muted-foreground">Minting a link…</p>}
+        {failed && <div className="my-4 rounded-md border border-destructive/20 bg-destructive/8 p-4 text-sm text-destructive">{failed}</div>}
+
+        {link && !busy && (
+          <div className="my-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a generated data: URL, nothing for next/image to optimise */}
+            {qr && <img src={qr} alt={`QR code linking ${agent.name} to Telegram`} className={cn("mx-auto rounded-md bg-white p-2", expired && "opacity-30")} width={240} height={240} />}
+            {!link.deep_link && <p className="text-sm text-muted-foreground">The API has no bot username configured, so there is no deep link — pass this token to the bot yourself.</p>}
+            <div className="mt-4 rounded-md bg-inset p-3 surface-ring"><code className="break-all font-mono text-xs leading-5">{link.deep_link ?? link.token}</code></div>
+            <p className={cn("mt-3 text-center text-xs", expired ? "font-medium text-destructive" : "text-muted-foreground")}>
+              {expired ? "This link has expired — mint another." : `Expires in ${clock}`}
+            </p>
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              The chat receives an agent key. It can spend inside this agent&apos;s limits, and cannot raise them, unfreeze it, or move money anywhere else.
+            </p>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => void mint()} disabled={busy}><RefreshCw aria-hidden="true" />New link</Button>
+          <Button
+            disabled={!link?.deep_link || expired}
+            onClick={async () => { if (!link?.deep_link) return; await navigator.clipboard.writeText(link.deep_link); setCopied(true); }}
+          >{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}{copied ? "Copied" : "Copy link"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function AgentDetailPage({ agentId }: { agentId: string }) {
@@ -136,7 +226,7 @@ export function AgentDetailPage({ agentId }: { agentId: string }) {
       {notice && <div role="status" className="mt-5 flex items-start gap-3 rounded-md border border-primary/45 bg-primary/15 px-4 py-3 text-sm text-primary-ink"><Check className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><p className="flex-1">{notice}</p><button className="-m-2 grid size-9 cursor-pointer place-items-center rounded-md hover:bg-primary/15" onClick={() => setNotice(null)} aria-label="Dismiss notice"><X className="size-4" /></button></div>}
       {error && <div role="alert" className="mt-5 flex items-start gap-3 rounded-md border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive"><ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><p className="flex-1">{error}</p><button className="-m-2 grid size-9 cursor-pointer place-items-center rounded-md hover:bg-destructive/10" onClick={() => setError(null)} aria-label="Dismiss error"><X className="size-4" /></button></div>}
 
-      <header className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><div className="flex items-center gap-2"><p className="font-mono text-[10px] font-medium tracking-[0.14em] text-primary-ink uppercase">Agent account</p><StateBadge status={agent.status} /></div><h1 className="mt-3 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">{agent.name}</h1><p className="mt-2 font-mono text-[11px] text-muted-foreground">{agent.id}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={rotateKey} disabled={busy || frozen}><KeyRound aria-hidden="true" />Rotate key</Button>{frozen ? <Button size="lg" onClick={toggleAgent} disabled={busy}><Play aria-hidden="true" />Reactivate & issue key</Button> : <Dialog open={freezeOpen} onOpenChange={setFreezeOpen}><DialogTrigger asChild><Button variant="destructive" size="lg"><Pause aria-hidden="true" />Freeze agent now</Button></DialogTrigger><DialogContent className="rounded-lg sm:max-w-[480px]"><DialogHeader><DialogTitle className="font-heading text-lg">Freeze this agent?</DialogTitle><DialogDescription>{agent.name} will stop accepting payments and all existing keys will be revoked.</DialogDescription></DialogHeader><div className="my-4 rounded-md border border-destructive/20 bg-destructive/8 p-4 text-sm text-destructive"><p className="font-medium">This takes effect before the next payment.</p><p className="mt-1 text-xs leading-5">Unfreezing issues a new copy-once key. Old keys never become valid again.</p></div><DialogFooter><Button variant="outline" onClick={() => setFreezeOpen(false)}>Cancel</Button><Button variant="destructive" onClick={toggleAgent} disabled={busy}>{busy ? "Freezing" : "Freeze and revoke keys"}</Button></DialogFooter></DialogContent></Dialog>}</div></header>
+      <header className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><div className="flex items-center gap-2"><p className="font-mono text-[10px] font-medium tracking-[0.14em] text-primary-ink uppercase">Agent account</p><StateBadge status={agent.status} /></div><h1 className="mt-3 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">{agent.name}</h1><p className="mt-2 font-mono text-[11px] text-muted-foreground">{agent.id}</p></div><div className="flex flex-wrap gap-2"><ConnectTelegram agent={agent} disabled={busy || frozen} /><Button variant="outline" onClick={rotateKey} disabled={busy || frozen}><KeyRound aria-hidden="true" />Rotate key</Button>{frozen ? <Button size="lg" onClick={toggleAgent} disabled={busy}><Play aria-hidden="true" />Reactivate & issue key</Button> : <Dialog open={freezeOpen} onOpenChange={setFreezeOpen}><DialogTrigger asChild><Button variant="destructive" size="lg"><Pause aria-hidden="true" />Freeze agent now</Button></DialogTrigger><DialogContent className="rounded-lg sm:max-w-[480px]"><DialogHeader><DialogTitle className="font-heading text-lg">Freeze this agent?</DialogTitle><DialogDescription>{agent.name} will stop accepting payments and all existing keys will be revoked.</DialogDescription></DialogHeader><div className="my-4 rounded-md border border-destructive/20 bg-destructive/8 p-4 text-sm text-destructive"><p className="font-medium">This takes effect before the next payment.</p><p className="mt-1 text-xs leading-5">Unfreezing issues a new copy-once key. Old keys never become valid again.</p></div><DialogFooter><Button variant="outline" onClick={() => setFreezeOpen(false)}>Cancel</Button><Button variant="destructive" onClick={toggleAgent} disabled={busy}>{busy ? "Freezing" : "Freeze and revoke keys"}</Button></DialogFooter></DialogContent></Dialog>}</div></header>
 
       <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><div className="rounded-lg bg-card p-5 surface-ring"><WalletCards className="size-4 text-muted-foreground" aria-hidden="true" /><p className="mt-4 font-heading text-2xl font-semibold tabular-nums">{formatMoney(agent.balance, agent.base_currency)}</p><p className="mt-1 text-xs text-muted-foreground">Available balance</p></div><div className="rounded-lg bg-card p-5 surface-ring"><p className="font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">Spent today</p><p className="mt-4 font-heading text-2xl font-semibold tabular-nums">{formatMoney(agent.spent_today, agent.base_currency)}</p><Progress value={usage} className="mt-3 h-1.5 rounded-sm bg-secondary [&>div]:rounded-sm" /></div><div className="rounded-lg bg-card p-5 surface-ring"><p className="font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">Remaining today</p><p className="mt-4 font-heading text-2xl font-semibold tabular-nums">{formatMoney(agent.remaining_today, agent.base_currency)}</p><p className="mt-1 text-xs text-muted-foreground">UTC-day allowance</p></div><div className="rounded-lg bg-card p-5 surface-ring"><KeyRound className="size-4 text-muted-foreground" aria-hidden="true" /><p className="mt-4 truncate font-mono text-sm font-semibold">{agent.key_prefix ?? "revoked"}</p><p className="mt-2 text-xs text-muted-foreground">Key preview · full key shown only once</p></div></div>
 
