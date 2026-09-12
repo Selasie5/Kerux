@@ -162,7 +162,7 @@ function OneTimeKeyDialog({ value, onClose }: { value: string | null; onClose: (
   );
 }
 
-function CreateAgentDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (open: boolean) => void; onCreated: (agent: Agent, apiKey?: string) => void }) {
+function CreateAgentDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (open: boolean) => void; onCreated: (agent: Agent, apiKey?: string, fundingError?: string | null) => void }) {
   const [currency, setCurrency] = React.useState<Currency>("GHST");
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -183,7 +183,7 @@ function CreateAgentDialog({ open, onOpenChange, onCreated }: { open: boolean; o
     };
     try {
       const created = await client.createAgent(input);
-      onCreated(created.agent, created.api_key);
+      onCreated(created.agent, created.api_key, created.funding_error);
       changeOpen(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The account could not be provisioned.");
@@ -312,9 +312,16 @@ export function AgentsPage() {
     }
   }
 
-  function created(agent: Agent, key?: string) {
+  function created(agent: Agent, key?: string, fundingError?: string | null) {
     setAgents((items) => [agent, ...items]);
-    setNotice(`${agent.name} now has an isolated identity, wallet, and policy envelope.`);
+    // Creation and funding are separate steps on the rail, and the second one
+    // fails on its own -- most often because the business wallet is empty.
+    // Saying "provisioned" over a 0.00 balance is the confusing version.
+    setNotice(
+      fundingError
+        ? `${agent.name} was created, but its opening balance did not arrive: ${fundingError}. The key below is valid -- fund the agent from its page.`
+        : `${agent.name} now has an isolated identity, wallet, and policy envelope.`,
+    );
     if (key) setIssuedKey(key);
   }
 
