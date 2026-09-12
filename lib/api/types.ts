@@ -1,4 +1,9 @@
-export const currencies = ["GHST", "USD", "GHS", "EUR", "GBP", "NGN", "KES", "USDT", "USDC"] as const;
+// Only GHST. WeWire will not provision a fiat wallet for a sub-customer until
+// KYC is approved, so an agent created as USD, GHS, EUR -- anything but a
+// stablecoin -- fails at the rail with CURRENCY_NOT_SUPPORTED. Offering those
+// options means the failure is a dropdown away rather than impossible.
+// Restore the rest once KYC is approved; nothing else has to change.
+export const currencies = ["GHST"] as const;
 
 export type Currency = (typeof currencies)[number];
 export type AgentStatus = "active" | "frozen" | string;
@@ -35,6 +40,10 @@ export interface AgentCreate {
 export interface AgentCreated {
   agent: Agent;
   api_key: string;
+  /** Set when the agent was created but its opening balance did not arrive.
+   *  The agent exists on the rail and the key is real, so this is a warning to
+   *  show alongside the key, never a reason to discard it. */
+  funding_error?: string | null;
 }
 
 export interface Payment {
