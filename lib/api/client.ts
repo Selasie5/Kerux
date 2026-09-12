@@ -8,6 +8,7 @@ import type {
   HealthStatus,
   KeyRotated,
   KillSwitchResult,
+  LinkToken,
   OwnerStats,
   Rules,
   RulesInput,
@@ -120,6 +121,13 @@ export class KeruxClient {
 
   unfreezeAgent(agentId: string) {
     return this.request<KillSwitchResult>(`/v1/owner/agents/${agentId}/unfreeze`, { method: "POST" });
+  }
+
+  /** Mint a Connect-to-Telegram link. Single-use, expires in minutes. */
+  createLinkToken(agentId: string) {
+    return this.request<LinkToken>(`/v1/owner/agents/${agentId}/link-tokens`, {
+      method: "POST",
+    });
   }
 
   rotateKey(agentId: string) {

@@ -113,3 +113,14 @@ export type OwnerEventType =
   | "agent.frozen"
   | "agent.unfrozen"
   | "agent.rules_updated";
+
+/** A one-time link a customer taps to bind one agent to one Telegram chat.
+ *  Single-use and short-lived, so mint on demand rather than caching one. */
+export type LinkToken = {
+  agent_id: string;
+  agent_name: string;
+  token: string;
+  /** Null when the API has no TELEGRAM_BOT_USERNAME configured. */
+  deep_link: string | null;
+  expires_at: string;
+};
