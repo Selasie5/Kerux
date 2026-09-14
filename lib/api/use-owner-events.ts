@@ -11,6 +11,8 @@ const eventTypes: OwnerEventType[] = [
   "agent.frozen",
   "agent.unfrozen",
   "agent.rules_updated",
+  "chat.connected",
+  "chat.disconnected",
 ];
 
 type OwnerEvent = {

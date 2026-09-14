@@ -3,6 +3,7 @@ import type {
   Agent,
   AgentCreate,
   AgentCreated,
+  ConnectedChat,
   FundInput,
   FundResult,
   HealthStatus,
@@ -75,6 +76,8 @@ export class KeruxClient {
       );
     }
 
+    // A 204 has no body to parse; `json()` on it throws.
+    if (response.status === 204) return undefined as T;
     return response.json() as Promise<T>;
   }
 
@@ -127,6 +130,18 @@ export class KeruxClient {
   createLinkToken(agentId: string) {
     return this.request<LinkToken>(`/v1/owner/agents/${agentId}/link-tokens`, {
       method: "POST",
+    });
+  }
+
+  /** The Telegram chats spending as this agent, most recently connected first. */
+  listChats(agentId: string) {
+    return this.request<ConnectedChat[]>(`/v1/owner/agents/${agentId}/chats`);
+  }
+
+  /** Stop one chat spending as this agent. The agent and its other chats carry on. */
+  disconnectChat(agentId: string, chatId: string) {
+    return this.request<void>(`/v1/owner/agents/${agentId}/chats/${encodeURIComponent(chatId)}`, {
+      method: "DELETE",
     });
   }
 
