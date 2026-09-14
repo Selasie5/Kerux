@@ -121,7 +121,18 @@ export type OwnerEventType =
   | "agent.funded"
   | "agent.frozen"
   | "agent.unfrozen"
-  | "agent.rules_updated";
+  | "agent.rules_updated"
+  | "chat.connected"
+  | "chat.disconnected";
+
+/** A Telegram chat spending as an agent. Kerux remembers it, so it survives the
+ *  bot restarting and comes back by itself after an unfreeze. */
+export interface ConnectedChat {
+  telegram_chat_id: string;
+  /** The Telegram @username or first name, when Telegram shared one. */
+  label: string | null;
+  linked_at: string | null;
+}
 
 /** A one-time link a customer taps to bind one agent to one Telegram chat.
  *  Single-use and short-lived, so mint on demand rather than caching one. */
